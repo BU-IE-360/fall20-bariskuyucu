@@ -1,0 +1,34 @@
+---
+title: "Interesting Forecasting Applications with R"
+author: "Ekrem Barış Kuyucu - IE360 - Fall 2020"
+---
+
+```{r,echo=FALSE,results="hide"}
+library(knitr)
+opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+```
+
+1.Forecasting monthly wine sales series using naive method (https://rstudio-pubs-static.s3.amazonaws.com/224141_e09871c7757944928463c8f9de0baa42.html)
+
+This code is important because due to the seasonal and trend component in the data, we see that the seasonal naive method is preferable than the naive method.It is possible to improve the modelling, since there is a trend component that it does not account for the seasonal naive method. 
+
+2.Simple Exponential Smoothing method
+(https://www.pluralsight.com/guides/time-series-forecasting-using-r)
+
+This simple exponential smoothing method is important Because the alpha value is close to 1, the forecasts are closer to the most recent observations.
+
+3.Double Seasonal Holt-Winters method
+(https://towardsdatascience.com/a-guide-to-forecasting-in-r-6b0c9638c261)
+
+This code is interesting.  Double Seasonal Holt-Winters (DSHW) allows for two seasonalities: a smaller one repeated often and a bigger one repeated less often. For the method to work however, the seasonalities need to be nested, meaning one must be an integer multiple of the other (2 and 4, 24 and 168, etc.).
+
+4.Autocorrelation and Partial-Autocorrelation
+(http://r-statistics.co/Time-Series-Analysis-With-R.html#What%20is%20Autocorrelation%20and%20Partial-Autocorrelation?)
+
+Autocorrelation is the correlation of a Time Series with lags of itself. This is a significant metric because,it shows if the previous states (lagged observations) of the time series has an influence on the current state. It is used commonly to determine if the time series is stationary or not.
+Partial Autocorrelation is the correlation of the time series with a lag of itself, with the linear dependence of all the lags between them removed.
+
+5.Energy Consumption - Time Series Forecasting in R
+(https://www.kaggle.com/apoorvabhide/energy-consumption-time-series-forecasting-in-r)
+
+With this code we are able to forecast energy consumption with the collected data. 
