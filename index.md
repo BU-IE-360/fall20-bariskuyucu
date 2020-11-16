@@ -1,4 +1,6 @@
-## Welcome to GitHub Pages
+# Progress Journal
 
-[Here] Ekrem Barış Kuyucu homework 0
+## Homework 0 (27/10/2020)
+
+[Here] (files/homework 0.html)
 
