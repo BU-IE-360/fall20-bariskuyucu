@@ -1,0 +1,147 @@
+---
+title: "hw1"
+author: "Ekrem Barış Kuyucu"
+date: "18 11 2020"
+output: html_document
+---
+
+```{r}
+#example 1
+
+library(data.table)
+library(ggplot2)
+
+#we read our data with fread function
+
+ogrenimdurum<- fread("D:/Boğaziçi/İe360/data/ogrenimdurum.csv")
+ogrenimdurumtrend <-fread("D:/Boğaziçi/İe360/data/ogrenimdurumtrend.csv")
+
+ogrenimdurum
+ogrenimdurumtrend 
+
+#our datas length should match
+
+length(ogrenimdurum[["Yillar"]])
+length(ogrenimdurumtrend[["Yillar"]])
+
+#data for box plot
+
+summary(ogrenimdurum[,2])
+summary(ogrenimdurumtrend[,2])
+
+#we name our x axes
+
+names(ogrenimdurum)[2]<-"Yuksekogretimalanyuzde"
+names(ogrenimdurumtrend)[2]<-"Ailelerinyoksullukorani"
+
+#we plot the histogram of the data
+
+ggplot(ogrenimdurum,aes(Yuksekogretimalanyuzde,))+geom_histogram(binwidth = 0.09) 
+
+#we plot the box plot of the data
+
+ggplot(ogrenimdurum, aes(Yuksekogretimalanyuzde,)) + geom_boxplot() 
+
+#we plot the box plot of trend data
+
+ggplot(ogrenimdurumtrend,aes(Ailelerinyoksullukorani,)) + geom_boxplot() 
+```
+
+```{r}
+#example 2
+
+library(data.table)
+library(ggplot2)
+
+#we read our data with fread function
+
+olum <-fread("D:/Boğaziçi/İe360/data/olum-sayilari.csv")
+olumtrend <-fread("D:/Boğaziçi/İe360/data/olum-sayilaritrend.csv")
+
+#our datas length should match
+
+length(olum[["Yillar"]])
+length(olumtrend[["Yillar"]])
+
+j = 1
+for(j in 1:length(olum[["Yillar"]])){
+  olum[j,"Yillar"] <- substring(olum[j,"Yillar"],2,5)
+  
+}
+
+#we name our x axes
+
+names(olum)[2]<-"Olumsayilari"
+names(olumtrend)[2] <- "Yatanhastasayisi"
+
+#data for box plot
+
+summary(olum[,2])
+summary(olumtrend[,2])
+
+#we plot the histogram of the data
+
+ggplot(olum,aes(Olumsayilari,))+geom_histogram(binwidth=5000)
+
+#we plot the box plot of the data
+
+ggplot(olum,aes(Olumsayilari,)) + geom_boxplot() 
+
+#we plot the box plot of trend data
+
+ggplot(olumtrend,aes(Yatanhastasayisi,)) + geom_boxplot() 
+
+```
+
+```{r }
+#example 3
+
+library(data.table)
+library(ggplot2)
+
+#we read our data with fread function
+
+eurokur <-fread("D:/Boğaziçi/İe360/data/euro-kur.csv")
+eurokurtrend <-fread("D:/Boğaziçi/İe360/data/euro-kurtrend.csv")
+
+#our datas length should match
+
+length(eurokur[["Tarih"]])
+length(eurokurtrend[["Tarihtrend"]])
+
+j = 1
+for(j in 1:length(eurokur[["Tarih"]])){
+  eurokur[j,"Tarih"] <- substring(eurokur[j,"Tarih"],4,5)
+  
+}
+
+#we name our x axes
+
+names(eurokur)[2]<-"eurokuru"
+names(eurokurtrend)[2] <- "kurailgi"
+
+#data for box plot
+
+summary(eurokur[,2])
+summary(eurokurtrend[,2])
+
+
+#we plot the histogram of the data
+
+ggplot(eurokur,aes(eurokuru,)) + geom_histogram(binwidth = 0.05) 
+
+#we plot the box plot of the data
+
+ggplot(eurokur, aes(x=eurokuru,)) + geom_boxplot()  
+
+#we plot the box plot of trend data
+
+ggplot(eurokurtrend, aes(x=kurailgi,)) + geom_boxplot() 
+
+
+
+```
+
+
+
+
