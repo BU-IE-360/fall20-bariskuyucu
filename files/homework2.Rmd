@@ -11,10 +11,10 @@ We want to observe if there are any relationship between exchange rates(dollar-T
 
 
 ```{r }
-library(data.table,quietly = TRUE)
-library(ggplot2,quietly = TRUE)
-library(lubridate,quietly = TRUE)
-library("PerformanceAnalytics",quietly = TRUE)
+library(data.table,quietly = TRUE,warn.conflicts = FALSE)
+library(ggplot2,quietly = TRUE,warn.conflicts = FALSE)
+library(lubridate,quietly = TRUE,warn.conflicts = FALSE)
+library("PerformanceAnalytics",quietly = TRUE,warn.conflicts = FALSE)
 
 
 ```

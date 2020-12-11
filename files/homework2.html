@@ -420,19 +420,10 @@ summary {
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>We want to observe if there are any relationship between exchange rates(dollar-TL),unemployment rates and price indices. So we collect some data over years between 2017 and 2020. We can plot these data and see that if there is a relation between these subjects. I thought that exchange rates, unemployment rates and price indices are related to each other. When exchange rates rise our money loses its value. So in this study I tried to find the correlation value between these parameters. With the data gathered we will be able to see that whether there is a relation or not. At first I assumed all these data are all correlated to each other. I expect to find low p values and relatively high r values at the end of this study.</p>
-<pre class="r"><code>library(data.table,quietly = TRUE)
-library(ggplot2,quietly = TRUE)
-library(lubridate,quietly = TRUE)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;lubridate&#39;</code></pre>
-<pre><code>## The following objects are masked from &#39;package:data.table&#39;:
-## 
-##     hour, isoweek, mday, minute, month, quarter, second, wday, week,
-##     yday, year</code></pre>
-<pre><code>## The following objects are masked from &#39;package:base&#39;:
-## 
-##     date, intersect, setdiff, union</code></pre>
-<pre class="r"><code>library(&quot;PerformanceAnalytics&quot;,quietly = TRUE)</code></pre>
+<pre class="r"><code>library(data.table,quietly = TRUE,warn.conflicts = FALSE)
+library(ggplot2,quietly = TRUE,warn.conflicts = FALSE)
+library(lubridate,quietly = TRUE,warn.conflicts = FALSE)
+library(&quot;PerformanceAnalytics&quot;,quietly = TRUE,warn.conflicts = FALSE)</code></pre>
 <pre><code>## 
 ## Attaching package: &#39;zoo&#39;</code></pre>
 <pre><code>## The following objects are masked from &#39;package:base&#39;:
@@ -443,11 +434,6 @@ library(lubridate,quietly = TRUE)</code></pre>
 <pre><code>## The following objects are masked from &#39;package:data.table&#39;:
 ## 
 ##     first, last</code></pre>
-<pre><code>## 
-## Attaching package: &#39;PerformanceAnalytics&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:graphics&#39;:
-## 
-##     legend</code></pre>
 <p>We read our data with fread function.</p>
 <pre class="r"><code>dolartl&lt;-fread(&quot;D:/Boğaziçi/İe360/data/hw2/dolar-tl.csv&quot;)
 unemployment&lt;-fread(&quot;D:/Boğaziçi/İe360/data/hw2/unemployment-rate.csv&quot;)
