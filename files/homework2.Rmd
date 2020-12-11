@@ -46,9 +46,9 @@ unemployment[,`Unemployment-rate`:=as.numeric(`Unemployment-rate`)]
 priceindices[,Indices:=gsub('\\,','.',Indices)]
 priceindices[,Indices:=as.numeric(Indices)]
 
-dolartl
-unemployment
-priceindices
+head(dolartl)
+head(unemployment)
+head(priceindices)
 
 
 ```
@@ -101,6 +101,9 @@ ggplot(data=priceindices,aes(,y=Indices))+
   labs(title="Monthly price indices between 01-2017 and 01-2020")
 
 ```
+
+
+
 We can see that our exchange rate values increased with time. At two points exchange rates had a small drop and we can say that it increased a small amount after the second drop.
 
 Unemployment rate started to decrease with beginning of 2017. Until june 2018 it follows a nearly constant rate. But after that date, it increases dramatically until january 2019. This huge increase may relate to the government policies. After january 2019 we can say that it stabilizes at a rate of %13.5.
@@ -152,7 +155,7 @@ We also can see the relationship between these datas in a single graph. The belo
 
 ```{r}
 newdata<-cbind.data.frame(dolartl[,Rate],unemployment[,`Unemployment-rate`],priceindices[,Indices])
-newdata
+head(newdata)
 chart.Correlation(newdata, histogram=TRUE, pch=3)
 
 
