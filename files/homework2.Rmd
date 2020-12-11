@@ -1,0 +1,163 @@
+---
+title: "HW2"
+author: "Ekrem Barış Kuyucu"
+date: "11 12 2020"
+output: html_document
+---
+
+## Introduction
+
+We want to observe if there are any relationship between exchange rates(dollar-TL),unemployment rates and price indices. So we collect some data over years between 2017 and 2020. We can plot these data and see that if there is a relation between these subjects. I thought that exchange rates, unemployment rates and price indices are related to each other. When exchange rates rise our money loses its value.  So in this study I tried to find the correlation value between these parameters. With the data gathered we will be able to see that whether there is a relation or not. At first I assumed all these data are all correlated to each other. I expect to find low p values and relatively high r values at the end of this study.
+
+
+```{r }
+library(data.table,quietly = TRUE)
+library(ggplot2,quietly = TRUE)
+library(lubridate,quietly = TRUE)
+library("PerformanceAnalytics",quietly = TRUE)
+
+
+```
+
+We read our data with fread function.
+
+```{r }
+dolartl<-fread("D:/Boğaziçi/İe360/data/hw2/dolar-tl.csv")
+unemployment<-fread("D:/Boğaziçi/İe360/data/hw2/unemployment-rate.csv")
+priceindices<-fread("D:/Boğaziçi/İe360/data/hw2/price-indices.csv")
+
+```
+
+
+We have to convert Date values to date because they were char values. Also we have to convert "," into "." ,with this Rate, Unemployment-Rate and Indices columns will be read correctly. We can see our data values after the manipulation of the "," values below.
+
+
+```{r }
+dolartl[,Date:=as.Date(paste(Date,"-01",sep=""))]
+unemployment[,Date:=as.Date(paste(Date,"-01",sep=""))]
+priceindices[,Date:=as.Date(paste(Date,"-01",sep=""))]
+
+dolartl[,Rate:=gsub('\\,','.',Rate)]
+dolartl[,Rate:=as.numeric(Rate)]
+
+unemployment[,`Unemployment-rate`:=gsub('\\,','.',`Unemployment-rate`)]
+unemployment[,`Unemployment-rate`:=as.numeric(`Unemployment-rate`)]
+
+priceindices[,Indices:=gsub('\\,','.',Indices)]
+priceindices[,Indices:=as.numeric(Indices)]
+
+dolartl
+unemployment
+priceindices
+
+
+```
+
+#Analysis of the data values
+
+We plot our data to see their values for each month.
+
+```{r}
+ggplot(data=dolartl,aes(x=Rate,))+
+  geom_histogram(binwidth=0.3,fill="blue",colour="blue")+
+  facet_grid(rows=year(dolartl[,Date]))+
+  labs(x="Exchange rates",title="Monthly exchange rates of USD-TL between 01-2017 and 01-2020")
+
+ggplot(data=dolartl,aes(x=Date,y=Rate))+
+  geom_line(colour="red")+
+  labs(x="Dates",y="Exchange Rates",title="Monthly exchange rates of USD-TL between 01-2017 and 01-2020")
+
+ggplot(data=dolartl,aes(,y=Rate))+
+  geom_boxplot(colour="red",fill="yellow")+
+  facet_wrap(dolartl[,year(Date)]) +
+  labs(title="Monthly exchange rates of USD-TL between 01-2017 and 01-2020")
+
+ggplot(data=unemployment,aes(x=`Unemployment-rate`,))+
+  geom_histogram(binwidth=0.3,fill="blue",colour="blue")+
+  facet_grid(rows=year(unemployment[,Date]))+
+  labs(x="Unemployment rates(%)",title="Monthly unemployment rates between 01-2017 and 01-2020")
+
+ggplot(data=unemployment,aes(x=Date,y=`Unemployment-rate`))+
+  geom_line(colour="red")+
+  labs(x="Dates",y="Unemployment Rates",title="Monthly unemployment rates between 01-2017 and 01-2020")
+
+ggplot(data=unemployment,aes(,y=`Unemployment-rate`))+
+  geom_boxplot(colour="red",fill="yellow")+
+  facet_wrap(unemployment[,year(Date)]) +
+  labs(title="Monthly unemployment rates between 01-2017 and 01-2020")
+  
+ggplot(data=priceindices,aes(x=Indices,))+
+  geom_histogram(binwidth=10,fill="blue",colour="blue")+
+  facet_grid(rows=year(priceindices[,Date]))+
+  labs(x="Price indices",title="Monthly price indices between 01-2017 and 01-2020")
+
+ggplot(data=priceindices,aes(x=Date,y=Indices))+
+  geom_line(colour="red")+
+  labs(x="Dates",y="Price indices",title="Monthly price indices between 01-2017 and 01-2020")
+
+ggplot(data=priceindices,aes(,y=Indices))+
+  geom_boxplot(colour="red",fill="yellow")+
+  facet_wrap(priceindices[,year(Date)]) +
+  labs(title="Monthly price indices between 01-2017 and 01-2020")
+
+```
+We can see that our exchange rate values increased with time. At two points exchange rates had a small drop and we can say that it increased a small amount after the second drop.
+
+Unemployment rate started to decrease with beginning of 2017. Until june 2018 it follows a nearly constant rate. But after that date, it increases dramatically until january 2019. This huge increase may relate to the government policies. After january 2019 we can say that it stabilizes at a rate of %13.5.
+
+We can say that price indices increased with time. Its value increased from beginning of january 2017 until september 2018 without dropping. At this time it decreased a little but continued to increase after that point until january 2020.
+
+#Correlation test
+
+After we have seen our values, now we can make our correlation test to see the relationship between our data.
+
+```{r}
+cor.test(dolartl[,Rate],unemployment[,`Unemployment-rate`])
+cor.test(dolartl[,Rate],priceindices[,Indices])
+cor.test(unemployment[,`Unemployment-rate`],priceindices[,Indices])
+
+
+```
+
+We see that p value of our analysis between exchange rates and unemployment rates is low. Correlation coefficient is 0.6751949 so we can say that they have a strong correlation. Exchange rates and unemployment rates tend to increase or decrease together. Before I started this study I thought that their values will match each other, when one of them increases the other one also increases. This assumption turned out to be true. 
+
+We see that p value of our analysis between exchange rates and price indices is very low. Correlation coefficient is 0.9433689 so we can say that they have a very strong correlation. Exchange rates and price indices increase or decrease together. The analysis showed that their tendency to increase or decrease is very likely to happen. I thought this will happen because I thought these two subjects are highly related to each other.
+
+We see that p value of our analysis between unemployment rates and price indices is low. Correlation coefficient is 0.7305268 so we can say that they have a strong correlation. Unemployment rates and price indices are likely to increase or decrease together. With this analysis we can conclude that they are likely to follow each other in their values.
+
+
+#Plot of our correlation datas
+
+Now we can see our new data on a plot and we can see the dual relationship between our datas. 
+
+```{r}
+ggplot(fortify(dolartl,unemployment), aes(x = dolartl[,Rate],y = unemployment[,`Unemployment-rate`]))+
+  geom_line(color="blue") +
+  labs(x = "Exchange rates",y = "Unemployment rates" ,title ="Correlation between Exchange rate and Unemployment rate" )
+
+ggplot(fortify(dolartl,priceindices), aes(x = dolartl[,Rate],y =priceindices[,Indices]))+
+  geom_line(color="blue") +
+  labs(x = "Exchange rates",y = "Price indices" ,title ="Correlation between Exchange rate and Price indices" )
+
+ggplot(fortify(unemployment,priceindices), aes(x =unemployment[,`Unemployment-rate`],y = priceindices[,Indices]))+
+  geom_line(color="blue") +
+  labs(x = "Unemployment rates",y = "Price indices" ,title ="Correlation between Unemployment rate and Price indices" )
+
+
+```
+
+As we see from our plots our data mostly are correlated to each other. Second table is most correlated of all. The others' values sometimes moved other directions but if we look at the big picture we can say that they are correlated too.
+
+We also can see the relationship between these datas in a single graph. The below graph shows us the correlation between these datas with scatter plots and histograms. We can also see the correlation values of these data sets.
+
+```{r}
+newdata<-cbind.data.frame(dolartl[,Rate],unemployment[,`Unemployment-rate`],priceindices[,Indices])
+newdata
+chart.Correlation(newdata, histogram=TRUE, pch=3)
+
+
+```
+
+#Conclusion
+
+We have found that our datas are mostly correlated with each other. Most correlated data was the relationship between exchange rates and price indices. We found low p values and moderate r values. This study showed that there is a relationship between these values. Some of them are very strong others are a little less stronger. We can conclude that exchange rates, unemployment rate and price indices are correlated with each other and they tend to follow each others path mostly.
