@@ -1,0 +1,197 @@
+---
+title: "homework 3"
+author: "Ekrem Barış Kuyucu"
+date: "06 01 2021"
+output: html_document
+---
+
+#Introduction
+We want to observe if there are any relationship between second hand house sales and the selected parameters interest rates, exchange rates and consumer confidence index. So we collect some data between years 2015 and 2020. I thought that exchange rates and interest rates have more effect on second hand house sales than consumer confidence index by looking their values. By building a model with second hand house sales and the other parameters, by finding a good p value and multiple R-squared value, we will try to predict next month's(December 2020) value.
+
+
+```{r}
+
+library(data.table,quietly = TRUE,warn.conflicts = FALSE)
+library(ggplot2,quietly = TRUE,warn.conflicts = FALSE)
+library(lubridate,quietly = TRUE,warn.conflicts = FALSE)
+library(zoo,quietly = TRUE,warn.conflicts = FALSE)
+
+```
+
+
+We read our data with fread function.
+
+
+```{r}
+
+secondhandsales<-fread("D:/Boğaziçi/İe360/data/hw3/second-hand-sales.csv",drop="V3")
+interestrates<-fread("D:/Boğaziçi/İe360/data/hw3/interest-rates.csv",drop="V3")
+exchangerates<-fread("D:/Boğaziçi/İe360/data/hw3/exchange-rates.csv",drop="V3")
+consumerconfidenceindex<-fread("D:/Boğaziçi/İe360/data/hw3/consumer-confidence-index.csv",drop="V3")
+
+```
+
+
+We have to convert date values to date because they were char values. Also we need to add the values on interest rates, exchange rates and consumer confidence index to our main data set second hand house sales, so we take the second columns of interest rates, exchange rates and consumer confidence index and add them to second hand house sales, so we can see the values on the same data set. 
+
+
+```{r}
+
+secondhandsales[,Date:=as.Date(paste(Date,"-01",sep=""))]
+interestrates[,Date:=as.Date(paste(Date,"-01",sep=""))]
+exchangerates[,Date:=as.Date(paste(Date,"-01",sep=""))]
+consumerconfidenceindex[,Date:=as.Date(paste(Date,"-01",sep=""))]
+
+secondhandsales$`Interest-rates`<-interestrates[,2]
+secondhandsales$`Exchange-rates`<-exchangerates[,2]
+secondhandsales$`Consumer-confidence-index`<-consumerconfidenceindex[,2]
+
+```
+
+
+#Visualization
+With the gathered data, we plot our 4 data sets in order to see their increases and decreases over time. We can see that in second hand house sales data until July 2019, the data set increases and decreases in a fairly similar range. Between July 2019 and April 2020 we may say that the sharp increases and decreases are a result of government policies. Starting with April 2020 a sharp decrease occurs. This may be a result of covid-19.
+
+
+```{r}
+
+ggplot(data=secondhandsales,aes(x=Date,group=1))+
+  geom_line(aes(y=`Second-hand-sales`),)+
+  scale_x_date(date_breaks="1 year", date_labels="%Y")+
+  scale_y_continuous(breaks=seq(40000, 160000, by = 20000))+
+  ggtitle("Second hand house sales characteristics with time")
+  
+ggplot(data=interestrates,aes(x=Date,group=1))+
+  geom_line(aes(y=`Interest-rates`))+
+  scale_x_date(date_breaks="1 year", date_labels="%Y")+
+  scale_y_continuous(breaks=seq(10, 40, by = 5))+
+  ggtitle("Interest rates characteristics with time")
+
+ggplot(data=exchangerates,aes(x=Date,group=1))+
+  geom_line(aes(y=`Exchange-rates`))+
+  scale_x_date(date_breaks="1 year", date_labels="%Y")+
+  scale_y_continuous(breaks=seq(3, 8, by = 1))+
+  ggtitle("Exchange rates characteristics with time")
+
+ggplot(data=consumerconfidenceindex,aes(x=Date,group=1))+
+  geom_line(aes(y=`Consumer-confidence-index`))+
+  scale_x_date(date_breaks="1 year", date_labels="%Y")+
+  scale_y_continuous(breaks=seq(75, 100, by = 5))+
+  ggtitle("Consumer confidence index characteristics with time")
+
+```
+
+
+#Analysis
+We build 3 models between second hand house sales and interest rates, exchange rates and consumer confidence index. Then we check their multiple R-squared values and p-values. From these summaries we see that exchange rates have better multiple R-squared value than other two. From this we may think exchange rates are a better modeling parameter. But we need to think about combinations of these or other parameters.
+
+
+```{r}
+
+fit_month<-lm (`Second-hand-sales`~`Interest-rates`,secondhandsales)
+summary(fit_month)
+
+fit_month<-lm (`Second-hand-sales`~`Exchange-rates`,secondhandsales)
+summary(fit_month)
+
+fit_month<-lm (`Second-hand-sales`~`Consumer-confidence-index`,secondhandsales)
+summary(fit_month)
+
+```
+
+
+We add other parameters trend, year and month to see if they have any effect on second hand house sales. As we predict from the plot of second hand house sales above we should eliminate the effect of covid-19 by appointing it to 1(months 64 and 65) for our model to see that value as a normal value. Then we add our selected 3 parameters interest rates, exchange rates and consumer confidence index to see which combination gives us the best solution among them. 
+
+
+```{r}
+
+secondhandsales[,trend_comp:=1:.N]
+secondhandsales[,Year:=year(Date)]
+secondhandsales[,Month:=as.factor(month(Date))]
+secondhandsales[64:65,remove_seasonality:=1]
+secondhandsales[is.na(remove_seasonality)==T,remove_seasonality:=0]
+secondhandsales
+
+fit_month<-lm (`Second-hand-sales`~`Interest-rates`+trend_comp,secondhandsales)
+summary(fit_month)
+
+fit_month<-lm (`Second-hand-sales`~`Exchange-rates`+trend_comp,secondhandsales)
+summary(fit_month)
+
+fit_month<-lm (`Second-hand-sales`~`Consumer-confidence-index`+trend_comp,secondhandsales)
+summary(fit_month)
+
+plot(fit_month$residual,main="Residuals by month")
+
+fit_month<-lm (`Second-hand-sales`~`Interest-rates`+`Exchange-rates`+as.factor(Month)+Year+trend_comp+as.factor(remove_seasonality),secondhandsales)
+summary(fit_month)
+plot(fit_month$residual,main="Residuals by month")
+
+
+fit_month<-lm (`Second-hand-sales`~`Exchange-rates`+trend_comp+Month+Year,secondhandsales)
+summary(fit_month)
+plot(fit_month$residual,main="Residuals by month")
+
+
+fit_month<-lm (`Second-hand-sales`~`Consumer-confidence-index`+trend_comp+Month+Year,secondhandsales)
+summary(fit_month)
+plot(fit_month$residual,main="Residuals by month")
+
+```
+
+
+We look at the auto correlation function of second hand house sales and cross correlation function of second hand house sales with other 3 components. Then we plot the relationship between them. Next we plot second hand house sales and residuals.
+
+
+```{r}
+acf(secondhandsales[,2],lag.max = 24,main="Autocorrelation function")
+ccf(secondhandsales$`Second-hand-sales`,secondhandsales$`Exchange-rates`,main="Cross correlation between second hand sales and exchange rates function")
+ccf(secondhandsales$`Second-hand-sales`,secondhandsales$`Interest-rates`,main="Cross correlation between second hand sales and interest rates function")
+ccf(secondhandsales$`Second-hand-sales`,secondhandsales$`Consumer-confidence-index`,main="Cross correlation between second hand sales and consumer confidence index function")
+
+plot(secondhandsales[,list(`Second-hand-sales`,interestrates)],main="Relationship between second hand sales and interest rates")
+plot(secondhandsales[,list(`Second-hand-sales`,exchangerates)],main="Relationship between second hand sales and exchange rates")
+plot(secondhandsales[,list(`Second-hand-sales`,consumerconfidenceindex)],main="Relationship between second hand sales and consumer confidence index")
+plot(secondhandsales[,list(`Second-hand-sales`,residual=fit_month$residual)],main="Relationship between second hand sales and residuals")
+```
+
+
+We try to predict next month's second hand house sales by using our model above and removing the points which are too low for our model to predict more accurately. We have our data until month 71 and we want to predict a value at month 72. To do this we use our fitted column to predict a value according to our previous sales data.
+
+
+```{r}
+
+secondhandsales[,fitted:=fitted(fit_month)]
+secondhandsales[,residual:=residuals(fit_month)]
+
+nextmonth<-"2020-12-01"
+secondhandsales<-rbind(secondhandsales,data.table(Date=as.Date(nextmonth)),fill = T)
+
+secondhandsales[.N,remove_seasonality:=0]
+secondhandsales[.N,trend_comp:=72]
+secondhandsales[.N,Month:=12]
+secondhandsales[.N,Year:=2020]
+secondhandsales[.N,`Interest-rates`:=secondhandsales[.N-1,`Interest-rates`]]
+secondhandsales[.N,`Exchange-rates`:=secondhandsales[.N-1,`Exchange-rates`]]
+secondhandsales[.N,`Consumer-confidence-index`:=secondhandsales[.N-1,`Consumer-confidence-index`]]
+
+predict(fit_month,secondhandsales[is.na(fitted)==T])
+secondhandsales[is.na(fitted)==T,fitted:=predict(fit_month,secondhandsales[is.na(fitted)==T])]
+
+cols<-c("predicted" = "orange", "actual" = "black")
+ggplot() + 
+  geom_line(data=secondhandsales,aes(x =trend_comp,y =fitted,color="predicted")) +
+  geom_line(data=secondhandsales,aes(x =trend_comp,y=`Second-hand-sales`,color="actual")) +
+  xlab('Date(months)')
+  ylab('Second hand sales') +
+  scale_color_manual(values=cols)
+
+tail(secondhandsales)
+
+```
+
+
+#Conclusion
+We tried to predict our 72.month second hand house sales value by building a model with interest rates and exchange rates parameters. Also we added year and month components to see our values more clearly. With our fitted value, we predicted that our sales will be 95613.14. This amount may or may not occur. Due to some unforeseeable events, our prediction may fail. But with our relatively high multiple R-squared and low p-values, we think that our prediction is likely to happen.
+
+

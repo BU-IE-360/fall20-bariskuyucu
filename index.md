@@ -12,3 +12,7 @@
 
 [Here](files/homework2.html) is my code for Homework 2.
 
+## Homework 3 (10/01/2021)
+
+[Here](files/homework3.html) is my code for Homework 3.
+
