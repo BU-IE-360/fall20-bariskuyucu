@@ -5,7 +5,8 @@ date: "06 01 2021"
 output: html_document
 ---
 
-#Introduction
+## Introduction
+
 We want to observe if there are any relationship between second hand house sales and the selected parameters interest rates, exchange rates and consumer confidence index. So we collect some data between years 2015 and 2020. I thought that exchange rates and interest rates have more effect on second hand house sales than consumer confidence index by looking their values. By building a model with second hand house sales and the other parameters, by finding a good p value and multiple R-squared value, we will try to predict next month's(December 2020) value.
 
 
@@ -49,7 +50,8 @@ secondhandsales$`Consumer-confidence-index`<-consumerconfidenceindex[,2]
 ```
 
 
-#Visualization
+## Visualization
+
 With the gathered data, we plot our 4 data sets in order to see their increases and decreases over time. We can see that in second hand house sales data until July 2019, the data set increases and decreases in a fairly similar range. Between July 2019 and April 2020 we may say that the sharp increases and decreases are a result of government policies. Starting with April 2020 a sharp decrease occurs. This may be a result of covid-19.
 
 
@@ -82,7 +84,8 @@ ggplot(data=consumerconfidenceindex,aes(x=Date,group=1))+
 ```
 
 
-#Analysis
+## Analysis
+
 We build 3 models between second hand house sales and interest rates, exchange rates and consumer confidence index. Then we check their multiple R-squared values and p-values. From these summaries we see that exchange rates have better multiple R-squared value than other two. From this we may think exchange rates are a better modeling parameter. But we need to think about combinations of these or other parameters.
 
 
@@ -182,8 +185,7 @@ cols<-c("predicted" = "orange", "actual" = "black")
 ggplot() + 
   geom_line(data=secondhandsales,aes(x =trend_comp,y =fitted,color="predicted")) +
   geom_line(data=secondhandsales,aes(x =trend_comp,y=`Second-hand-sales`,color="actual")) +
-  xlab('Date(months)')
-  ylab('Second hand sales') +
+  labs(xlab='Date(months)',ylab='Second hand sales', title='Second hand sales actual vs predicted values')
   scale_color_manual(values=cols)
 
 tail(secondhandsales)
@@ -191,7 +193,8 @@ tail(secondhandsales)
 ```
 
 
-#Conclusion
+## Conclusion
+
 We tried to predict our 72.month second hand house sales value by building a model with interest rates and exchange rates parameters. Also we added year and month components to see our values more clearly. With our fitted value, we predicted that our sales will be 95613.14. This amount may or may not occur. Due to some unforeseeable events, our prediction may fail. But with our relatively high multiple R-squared and low p-values, we think that our prediction is likely to happen.
 
 
