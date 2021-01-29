@@ -1,0 +1,284 @@
+---
+title: "hw4"
+author: "Ekrem Barış Kuyucu"
+date: "22 01 2021"
+output: html_document
+---
+
+## Introduction
+
+We want to forecast the electricity consumption for 14 days ahead. To do this we will use the data from 1 January 2017 to 8 January 2021. We need a stationary data in order to have good forecast values. We will analyze the data and try to find the values which disrupt our data's stationarity. We have some idea that some special holidays may have an effect on these values. We will plot our data and add some parameters to our model, then see whether we can see it easily the data that disrupt our data's stationarity. 
+
+
+
+```{r}
+
+library(data.table)
+library(lubridate)
+library(zoo)
+library(forecast)
+library(mgcv)
+library(urca)
+library(ggplot2)
+library(gratia)
+
+```
+
+We read our data with fread function. We have to convert date values to date because they were char values. Also our data used "." for indicating that a number is more than a thousand we need to erase that. Then our csv file used "," for decimal points, so we need to convert it to "." in order to use the data more efficiently. Then we see the first 25 data whether our data looks like we wanted.
+
+```{r}
+
+consumption<-fread("D:/Boğaziçi/İe360/data/hw4/RealTimeConsumption-01012017-08012021.csv")
+
+consumption[,Date:=as.Date(Date,format = "%d.%m.%Y")]
+consumption[,Consumption:=gsub('\\,','\\',Consumption)]
+consumption[,Consumption:=as.numeric(Consumption)]
+head(consumption,25)
+
+```
+
+## Visualization 
+
+Our data is hourly. We want to use daily data for our forecast. So we need to calculate the mean consumption of each day and combine them into a daily parameter. Then we plot our daily data to see how it shows seasonalities to us. In order to see the seasonalities even better we use difference between a day and 7 days before that day and with its plot we can see the seasonalities even better. We use kpss to see our test statistic value. It seems reasonable but we will try to find a better value.
+
+```{r}
+
+daily_consumption<-consumption[,list(mean_consumption=mean(Consumption,na.rm=T)),by=list(Date)]
+ggplot(daily_consumption,aes(x=Date))+ geom_line(aes(y=mean_consumption))
+
+daily_consumption[,differ:=mean_consumption-shift(mean_consumption,7)]
+ggplot(daily_consumption,aes(x=Date)) + geom_line(aes(y=differ))
+
+daily_consumption[,w_day:=weekdays(Date)]
+daily_consumption[,y_day:=yday(Date)]
+daily_consumption[,mon:=months(Date)]
+daily_consumption[,time_index:=1:.N]
+
+unt_test=ur.kpss(daily_consumption$mean_consumption) 
+summary(unt_test)
+
+```
+
+## Analysis
+
+We defined some special days and holidays and looked their values from our data. In these days which are defined below, our daily consumption values are lower than our usual values that are before and after some these days. So we may say that they create seasonality over time.
+
+```{r}
+
+
+daily_consumption[,yeni_yil:=0]
+daily_consumption[Date %in% as.Date(c("2017-01-01","2018-01-01","2019-01-01","2020-01-01","2021-01-01")),yeni_yil:=1]
+
+daily_consumption[,yeni_yil1:=yeni_yil-shift(yeni_yil,7)]
+
+daily_consumption[,yirmi_uc_nisan:=0]
+daily_consumption[Date %in% as.Date(c("2017-04-23","2018-04-23","2019-04-23","2020-04-23")),yirmi_uc_nisan:=1]
+
+daily_consumption[,yirmi_uc_nisan1:=yirmi_uc_nisan-shift(yirmi_uc_nisan,7)]
+
+daily_consumption[,on_dokuz_mayis:=0]
+daily_consumption[Date %in% as.Date(c("2017-05-19","2018-05-19","2019-05-19","2020-05-19")),on_dokuz_mayis:=1]
+
+daily_consumption[,on_dokuz_mayis1:=on_dokuz_mayis-shift(on_dokuz_mayis,7)]
+
+daily_consumption[,bir_mayis:=0]
+daily_consumption[Date %in% as.Date(c("2017-04-30","2017-05-01","2018-05-01","2019-05-01","2020-05-01")),bir_mayis:=1]
+
+daily_consumption[,bir_mayis1:=bir_mayis-shift(bir_mayis,7)]
+
+daily_consumption[,on_bes_temmuz:=0]
+daily_consumption[Date %in% as.Date(c("2018-07-15","2019-07-15")),on_bes_temmuz:=1]
+
+daily_consumption[,on_bes_temmuz1:=on_bes_temmuz-shift(on_bes_temmuz,7)]
+
+daily_consumption[,yirmi_dokuz_ekim:=0]
+daily_consumption[Date %in% as.Date(c("2017-10-29","2018-10-28","2018-10-29","2019-10-27","2019-10-28","2019-10-29")),yirmi_dokuz_ekim:=1]
+
+daily_consumption[,yirmi_dokuz_ekim1:=yirmi_dokuz_ekim-shift(yirmi_dokuz_ekim,7)]
+
+daily_consumption[,ramazan_bayrami:=0]
+daily_consumption[Date %in% as.Date(c("2017-06-24","2017-06-25","2017-06-26","2017-06-27","2018-06-14","2018-06-15","2018-06-16","2018-06-17","2019-06-02","2019-06-03","2019-06-04","2019-06-05","2019-06-06","2019-06-07","2019-06-08","2019-06-09","2020-05-23","2020-05-24","2020-05-25","2020-05-26")),ramazan_bayrami:=1]
+
+daily_consumption[,ramazan_bayrami1:=ramazan_bayrami-shift(ramazan_bayrami,7)]
+
+daily_consumption[,kurban_bayrami:=0]
+daily_consumption[Date %in% as.Date(c("2017-08-31","2017-09-01","2017-09-02","2017-09-03","2017-09-04","2018-08-20","2018-08-21","2018-08-22","2018-08-23","2018-08-24","2019-08-11","2019-08-12","2019-08-13","2019-08-14","2020-07-31","2020-08-01","2020-08-02","2020-08-03")),kurban_bayrami:=1]
+
+daily_consumption[,kurban_bayrami1:=kurban_bayrami-shift(kurban_bayrami,7)]
+                  
+daily_consumption[,covid19:=0]
+daily_consumption[Date>="2020-05-01" & Date<="2020-07-01" ,covid19:=1]
+
+daily_consumption[,covid:=covid19-shift(covid19,7)]
+
+
+
+```
+
+We look at the autocorrelation and partial autocorrelation function of our data with the mean consumption. Then we need to define the days which we are going to forecast. We must add these dates to our data because if we don't we can't forecast. After adding these 14 days we need to add our previously defined parameters again because the forecasted days won't have them.
+
+```{r}
+acf(daily_consumption$mean_consumption)
+
+pacf(daily_consumption$mean_consumption)
+
+reg1<-cbind(as.factor(daily_consumption$w_day),as.factor(daily_consumption$mon),as.factor(daily_consumption$y_day),daily_consumption$time_index,daily_consumption$yeni_yil1,daily_consumption$yirmi_uc_nisan1,daily_consumption$bir_mayis1,daily_consumption$on_bes_temmuz1,daily_consumption$yirmi_dokuz_ekim1,daily_consumption$ramazan_bayrami1,daily_consumption$kurban_bayrami1,daily_consumption$covid)
+
+fitted1<-auto.arima(daily_consumption$differ,xreg=reg1,seasonal=F,trace=T)
+
+forecast_dates<-c("2021-01-09","2021-01-10","2021-01-11","2021-01-12","2021-01-13","2021-01-14","2021-01-15","2021-01-16","2021-01-17","2021-01-18","2021-01-19","2021-01-20","2021-01-21","2021-01-22")
+
+daily_consumption<-rbind(daily_consumption,data.table(Date=as.Date(forecast_dates)),fill=T) 
+
+daily_consumption[,w_day:=weekdays(Date)]
+daily_consumption[,y_day:=yday(Date)]
+daily_consumption[,mon:=months(Date)]
+daily_consumption[,time_index:=1:.N]
+
+daily_consumption[,yeni_yil:=0]
+daily_consumption[Date %in% as.Date(c("2017-01-01","2018-01-01","2019-01-01","2020-01-01","2021-01-01")),yeni_yil:=1]
+
+daily_consumption[,yeni_yil1:=yeni_yil-shift(yeni_yil,7)]
+
+daily_consumption[,yirmi_uc_nisan:=0]
+daily_consumption[Date %in% as.Date(c("2017-04-23","2018-04-23","2019-04-23","2020-04-23")),yirmi_uc_nisan:=1]
+
+daily_consumption[,yirmi_uc_nisan1:=yirmi_uc_nisan-shift(yirmi_uc_nisan,7)]
+
+daily_consumption[,on_dokuz_mayis:=0]
+daily_consumption[Date %in% as.Date(c("2017-05-19","2018-05-19","2019-05-19","2020-05-19")),on_dokuz_mayis:=1]
+
+daily_consumption[,on_dokuz_mayis1:=on_dokuz_mayis-shift(on_dokuz_mayis,7)]
+
+daily_consumption[,bir_mayis:=0]
+daily_consumption[Date %in% as.Date(c("2017-04-30","2017-05-01","2018-05-01","2019-05-01","2020-05-01")),bir_mayis:=1]
+
+daily_consumption[,bir_mayis1:=bir_mayis-shift(bir_mayis,7)]
+
+daily_consumption[,on_bes_temmuz:=0]
+daily_consumption[Date %in% as.Date(c("2018-07-15","2019-07-15")),on_bes_temmuz:=1]
+
+daily_consumption[,on_bes_temmuz1:=on_bes_temmuz-shift(on_bes_temmuz,7)]
+
+daily_consumption[,yirmi_dokuz_ekim:=0]
+daily_consumption[Date %in% as.Date(c("2017-10-29","2018-10-28","2018-10-29","2019-10-27","2019-10-28","2019-10-29")),yirmi_dokuz_ekim:=1]
+
+daily_consumption[,yirmi_dokuz_ekim1:=yirmi_dokuz_ekim-shift(yirmi_dokuz_ekim,7)]
+
+daily_consumption[,ramazan_bayrami:=0]
+daily_consumption[Date %in% as.Date(c("2017-06-24","2017-06-25","2017-06-26","2017-06-27","2018-06-14","2018-06-15","2018-06-16","2018-06-17","2019-06-02","2019-06-03","2019-06-04","2019-06-05","2019-06-06","2019-06-07","2019-06-08","2019-06-09","2020-05-23","2020-05-24","2020-05-25","2020-05-26")),ramazan_bayrami:=1]
+
+daily_consumption[,ramazan_bayrami1:=ramazan_bayrami-shift(ramazan_bayrami,7)]
+
+daily_consumption[,kurban_bayrami:=0]
+daily_consumption[Date %in% as.Date(c("2017-08-31","2017-09-01","2017-09-02","2017-09-03","2017-09-04","2018-08-20","2018-08-21","2018-08-22","2018-08-23","2018-08-24","2019-08-11","2019-08-12","2019-08-13","2019-08-14","2020-07-31","2020-08-01","2020-08-02","2020-08-03")),kurban_bayrami:=1]
+
+daily_consumption[,kurban_bayrami1:=kurban_bayrami-shift(kurban_bayrami,7)]
+                  
+daily_consumption[,covid19:=0]
+daily_consumption[Date>="2020-05-01" & Date<="2020-07-01" ,covid19:=1]
+
+daily_consumption[,covid:=covid19-shift(covid19,7)]
+
+```
+
+With using auto-arima we select which model will be the best for our forecast. We see that Regression with ARIMA(4,0,1) errors gives us the best solution. We will use this value in our forecast. Then we will use this to forecast means to predict our 14 days values ahead. 
+
+```{r}
+
+reg<-lm(differ~yeni_yil1+on_dokuz_mayis1+yirmi_uc_nisan1+bir_mayis1+on_bes_temmuz1+yirmi_dokuz_ekim1+ramazan_bayrami1+kurban_bayrami1+covid,daily_consumption)
+summary(reg)
+
+plot(reg$residual,main="Residuals with 19 may daily")
+
+reg<-lm(differ~yeni_yil+yirmi_uc_nisan1+bir_mayis1+on_bes_temmuz1+yirmi_dokuz_ekim1+ramazan_bayrami1+kurban_bayrami1+covid,daily_consumption)
+summary(reg)
+
+plot(reg$residual,main="Residuals daily")
+
+reg1<-cbind(as.factor(daily_consumption$w_day),as.factor(daily_consumption$mon),as.factor(daily_consumption$y_day),daily_consumption$time_index,daily_consumption$yeni_yil1,daily_consumption$yirmi_uc_nisan1,daily_consumption$bir_mayis1,daily_consumption$on_bes_temmuz1,daily_consumption$yirmi_dokuz_ekim1,daily_consumption$ramazan_bayrami1,daily_consumption$kurban_bayrami1,daily_consumption$covid)
+
+```
+
+Then we build our model with the special days we defined and plot them. We see that the special days have an effect on our stationarity. When we look at the summary of our model and we see the effect of the special days. Since 19th of May doesn't have significant effect on our model we won't use it. After building and plotting our model, we do kpss test again to see if we improved it. Then we forecast our point estimates.
+
+```{r}
+
+unt_test=ur.kpss(daily_consumption$differ) 
+summary(unt_test)
+
+forecasted<-forecast(fitted1,h=14,xreg=tail(reg1,14))
+forecasted$mean
+
+```
+
+With some data manipulation we try to fit the forecasted points to our data.
+
+```{r}
+
+daily_consumption[,forecast_differ:=c(rep(NA,7),fitted1$fitted,forecasted$mean)]
+
+daily_consumption[Date<="2021-01-15",f2:=forecast_differ+shift(mean_consumption,7)]
+daily_consumption[Date>"2021-01-15",f2:=tail(daily_consumption$forecast_differ,7)+daily_consumption[Date%between%as.Date(c("2021-01-09","2021-01-15")),f2]]
+
+daily_consumption[,w_day:=weekdays(Date)]
+daily_consumption[,y_day:=yday(Date)]
+daily_consumption[,mon:=months(Date)]
+daily_consumption[,time_index:=1:.N]
+
+tail(daily_consumption,30)
+
+```
+
+We read our actual values of the predicted period. We also need to do necessary operations needed in order to make our data usable. Then we take the mean of these dataset for daily consumption. 
+
+```{r}
+
+consumption1<-fread("D:/Boğaziçi/İe360/data/hw4/RealTimeConsumption-09012021-22012021.csv")
+
+consumption1[,Date:=as.Date(Date,format = "%d.%m.%Y")]
+consumption1[,Consumption:=gsub('\\,','\\',Consumption)]
+consumption1[,Consumption:=as.numeric(Consumption)]
+consumption1
+daily_consumption1<-consumption1[,list(mean_consumption1=mean(Consumption,na.rm=T)),by=list(Date)]
+daily_consumption1
+
+```
+
+After we predicted our data, we plot them on the same graph to see that whether they are similar or not.
+
+```{r}
+
+ggplot() + 
+  geom_line(data=tail(daily_consumption,14),aes(x=Date,y=f2,color="forecast")) +
+  geom_line(data=tail(daily_consumption1,14),aes(x=Date,y=mean_consumption1,color="actual")) +
+  labs(xlab='Date(days)',ylab='Daily consumption', title='Forcested and actual values of daily consumption')+
+  ylab("daily consumption")
+
+```
+
+After we predicted and plotted our values 14 days ahead it is time to look at their WMAPE value. The lower this value, our forecast will be more accurate.
+
+```{r}
+
+accu = function(actual, forecast){
+  n = length(actual)
+  error = actual - forecast
+  mean = mean(actual)
+  sd = sd(actual)
+  FBias = sum(error)/sum(actual)
+  MPE = sum(error/actual)/n
+  MAPE = sum(abs(error/actual))/n
+  RMSE = sqrt(sum(error^2)/n)
+  MAD = sum(abs(error))/n
+  WMAPE = MAD/mean
+  return(data.frame(n,sd,FBias,MPE,MAPE,RMSE,MAD,WMAPE)) 
+}
+
+accu(daily_consumption1$mean_consumption1,tail(daily_consumption$f2,14))
+
+```
+
+## Conclusion
+
+Our WMAPE value can be considered small. We may say that our prediction is successful. We thought that special holidays have an effect on consumption. We tried to make our data as stationary as possible by using these special holidays' effect. There are some data which are not in special holidays but have low consumption values. By finding these values with some different approach we may make our data more stationary. 
