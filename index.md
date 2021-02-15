@@ -24,3 +24,7 @@
 
 [Here](files/project.html) is our project.
 
+## Project Report (15/02/2021)
+
+[Here](files/project-report.html) is our project report.
+
